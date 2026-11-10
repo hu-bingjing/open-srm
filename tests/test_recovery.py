@@ -4,6 +4,8 @@ import io,tarfile,tempfile,unittest
 ROOT=Path(__file__).resolve().parents[1]
 spec=importlib.util.spec_from_file_location('recovery',ROOT/'scripts/recovery.py');r=importlib.util.module_from_spec(spec);spec.loader.exec_module(r)
 class RecoverySafetyTests(unittest.TestCase):
+ def setUp(self):
+  (ROOT/'tmp').mkdir(exist_ok=True)
  def test_image_export_requires_all_layers_and_running_images(self):
   import json
   with tempfile.TemporaryDirectory(dir=ROOT/'tmp') as work:

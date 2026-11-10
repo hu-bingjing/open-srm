@@ -11,8 +11,10 @@ spec.loader.exec_module(provisioning)
 
 
 class ProvisioningTests(unittest.TestCase):
-    def test_random_secrets_and_no_overwrite(self):
+    def setUp(self):
         (ROOT / "tmp").mkdir(exist_ok=True)
+
+    def test_random_secrets_and_no_overwrite(self):
         with tempfile.TemporaryDirectory(dir=ROOT / "tmp") as directory:
             base = Path(directory)
             with patch.object(provisioning, "ROOT", base), patch("sys.argv", ["init-local.py"]), patch("builtins.print"):
