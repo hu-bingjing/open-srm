@@ -6,5 +6,5 @@
   "engines": {"node": ">=22.12.0"},
   "scripts": {"dev": "vite --host 127.0.0.1", "build": "vue-tsc --noEmit && vite build", "preview": "vite preview --host 127.0.0.1", "test:e2e": "playwright test"},
   "dependencies": {"vue": "3.5.45", "element-plus": "2.14.7"},
-  "devDependencies": {"vite": "8.3.6", "@vitejs/plugin-vue": "6.0.10", "typescript": "5.9.3", "vue-tsc": "3.3.14", "@playwright/test": "1.65.0"}
+  "devDependencies": {"vite": "8.3.6", "@vitejs/plugin-vue": "6.0.10", "typescript": "7.0.2", "vue-tsc": "3.3.14", "@playwright/test": "1.65.0"}
 }
