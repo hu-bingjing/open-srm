@@ -28,7 +28,7 @@ py-serializable==2.2.0
 Pygments==2.21.0
 pyparsing==3.3.3
 PyYAML==6.0.3
-referencing==0.36.2
+referencing==0.37.0
 requests==2.34.2
 rfc3339-validator==0.1.4
 rich==15.0.0
