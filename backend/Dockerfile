@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/maven:3.9.11-eclipse-temurin-21-alpine@sha256:922927df2c662cdd47ddb116443d6bec4696cfae3de1a0ddac8fcc7b87ce61ae AS build
+FROM public.ecr.aws/docker/library/maven:3.9-eclipse-temurin-26-alpine@sha256:4c85d516dd8c7e50d49a403d604e565e0dbb09a790186fe3245725d313ae7cb9 AS build
 WORKDIR /workspace
 COPY pom.xml .
 RUN mvn -B -ntp dependency:go-offline
