@@ -4,11 +4,12 @@ set -eu
 mkdir -p tmp/image-audit tmp/trivy-cache
 for component in api web database; do
   docker run --rm --network host --cap-drop ALL --security-opt no-new-privileges:true \
+    --user "$(id -u):$(id -g)" --group-add "$(stat -c %g /var/run/docker.sock)" \
     -v /var/run/docker.sock:/var/run/docker.sock:ro \
-    -v "$(pwd)/tmp/trivy-cache:/root/.cache/trivy" \
+    -v "$(pwd)/tmp/trivy-cache:/tmp/trivy-cache" \
     -v "$(pwd)/tmp/image-audit:/reports" \
     ghcr.io/aquasecurity/trivy@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb \
-    image --image-src docker --scanners vuln,secret,license --license-full \
+    image --cache-dir /tmp/trivy-cache --image-src docker --scanners vuln,secret,license --license-full \
     --timeout 30m --no-progress --format json --output "/reports/$component.json" \
     "open-srm-$component:0.8.0-local"
 done
