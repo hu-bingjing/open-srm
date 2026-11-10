@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+if command -v python >/dev/null 2>&1; then
+  exec python scripts/scan_sensitive.py --staged
+fi
+exec python3 scripts/scan_sensitive.py --staged

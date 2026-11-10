@@ -1,0 +1,26 @@
+{
+  "purchaseOrder": {
+    "initial": "ACTIVE",
+    "transitions": {"ACTIVE": ["CLOSED", "CANCELLED"], "CLOSED": ["ACTIVE"], "CANCELLED": []}
+  },
+  "confirmation": {
+    "initial": "DRAFT",
+    "transitions": {"DRAFT": ["SUBMITTED", "CANCELLED"], "SUBMITTED": ["EFFECTIVE", "REJECTED", "SUPERSEDED"], "EFFECTIVE": ["SUPERSEDED"], "REJECTED": [], "CANCELLED": [], "SUPERSEDED": []}
+  },
+  "deliveryChange": {
+    "initial": "DRAFT",
+    "transitions": {"DRAFT": ["SUBMITTED"], "SUBMITTED": ["APPROVED", "REJECTED", "WITHDRAWN", "SUPERSEDED"], "APPROVED": [], "REJECTED": [], "WITHDRAWN": [], "SUPERSEDED": []}
+  },
+  "deliveryPlan": {
+    "initial": "PLANNED",
+    "transitions": {"PLANNED": ["PARTIALLY_SHIPPED", "SHIPPED", "CANCELLED", "SUPERSEDED"], "PARTIALLY_SHIPPED": ["SHIPPED", "SUPERSEDED"], "SHIPPED": [], "CANCELLED": [], "SUPERSEDED": []}
+  },
+  "asn": {
+    "initial": "DRAFT",
+    "transitions": {"DRAFT": ["SUBMITTED", "CANCELLED"], "SUBMITTED": ["ACKNOWLEDGED", "CANCELLED", "FAILED"], "ACKNOWLEDGED": [], "CANCELLED": [], "FAILED": ["SUBMITTED"]}
+  },
+  "goodsReceipt": {
+    "initial": "POSTED",
+    "transitions": {"POSTED": ["PARTIALLY_REVERSED", "REVERSED"], "PARTIALLY_REVERSED": ["REVERSED"], "REVERSED": []}
+  }
+}

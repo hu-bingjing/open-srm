@@ -1,0 +1,17 @@
+# Optional, explicitly enabled development/test SAP connection. Never include populated secrets in source.
+services:
+  api:
+    environment:
+      OPEN_SRM_ERP_ADAPTER: sap-readonly
+      OPEN_SRM_SAP_CONFIG: /run/secrets/sap_config
+      OPEN_SRM_ERP_WRITE_ENABLED: 'false'
+    secrets:
+      - source: sap_config
+        target: sap_config
+      - source: sap_ca
+        target: sap_ca
+secrets:
+  sap_config:
+    file: ../private/sap/adapter.json
+  sap_ca:
+    file: ../private/sap/test-ca.cer

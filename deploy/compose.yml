@@ -1,0 +1,86 @@
+name: open-srm
+services:
+  database:
+    build: ./database
+    image: open-srm-database:0.8.0-local
+    environment:
+      POSTGRES_DB: open_srm
+      POSTGRES_USER: ${OPEN_SRM_DB_USER:-opensrm}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    secrets:
+      - source: db_password
+        target: db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [backend]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  api:
+    build: ../backend
+    image: open-srm-api:0.8.0-local
+    environment:
+      OPEN_SRM_DB_URL: jdbc:postgresql://database:5432/open_srm
+      OPEN_SRM_DB_USER: ${OPEN_SRM_DB_USER:-opensrm}
+      OPEN_SRM_ENV: ${OPEN_SRM_ENV:-local}
+      OPEN_SRM_COOKIE_SECURE: ${OPEN_SRM_COOKIE_SECURE:-false}
+      OPEN_SRM_ERP_ADAPTER: mock
+      OPEN_SRM_ERP_WRITE_ENABLED: 'false'
+    secrets:
+      - source: db_password
+        target: spring.datasource.password
+      - source: bootstrap_token
+        target: opensrm.bootstrap-token
+      - source: idempotency_key
+        target: opensrm.idempotency-key
+    networks: [backend, frontend]
+    depends_on:
+      database: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 1g
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1:8080/actuator/health/readiness || exit 1']
+      interval: 10s
+      timeout: 5s
+      start_period: 90s
+      retries: 18
+    restart: unless-stopped
+  web:
+    build: ../frontend
+    image: open-srm-web:0.8.0-local
+    ports:
+      - '${OPEN_SRM_HTTP_BIND:-127.0.0.1}:${OPEN_SRM_HTTP_PORT:-8080}:8080'
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [frontend]
+    depends_on:
+      api: {condition: service_healthy}
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1:8080/healthz || exit 1']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+networks:
+  backend: {internal: true}
+  frontend: {}
+volumes:
+  postgres-data: {}
+secrets:
+  db_password:
+    file: ../private/db-password
+  bootstrap_token:
+    file: ../private/bootstrap-token
+  idempotency_key:
+    file: ../private/idempotency-key

@@ -1,0 +1,68 @@
+{
+  "contractVersion": "0.3.0",
+  "defaultAdapter": "mock",
+  "defaultWriteEnabled": false,
+  "ports": [
+    {
+      "name": "OrganizationProvider",
+      "direction": "read",
+      "method": "fetchOrganizations",
+      "entity": "Organization"
+    },
+    {
+      "name": "SupplierProvider",
+      "direction": "read",
+      "method": "fetchSuppliers",
+      "entity": "Supplier"
+    },
+    {
+      "name": "MaterialProvider",
+      "direction": "read",
+      "method": "fetchMaterials",
+      "entity": "Material"
+    },
+    {
+      "name": "PurchaseOrderProvider",
+      "direction": "read",
+      "method": "fetchPurchaseOrders",
+      "entity": "PurchaseOrder"
+    },
+    {
+      "name": "GoodsReceiptProvider",
+      "direction": "read",
+      "method": "fetchGoodsReceipts",
+      "entity": "GoodsReceipt"
+    },
+    {
+      "name": "OrderConfirmationPublisher",
+      "direction": "publish",
+      "method": "publishConfirmation",
+      "entity": "Confirmation"
+    },
+    {
+      "name": "AdvanceShippingNoticePublisher",
+      "direction": "publish",
+      "method": "publishAsn",
+      "entity": "AdvanceShippingNotice"
+    }
+  ],
+  "pageFields": [
+    "items",
+    "nextCursor",
+    "snapshotId"
+  ],
+  "sourceFields": [
+    "sourceSystem",
+    "sourceClient",
+    "externalKey",
+    "sourceRevision",
+    "sourceUpdatedAt",
+    "sourceSequence"
+  ],
+  "publishOutcomes": [
+    "ACCEPTED",
+    "REJECTED",
+    "UNKNOWN",
+    "UNSUPPORTED"
+  ]
+}

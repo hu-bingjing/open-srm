@@ -1,0 +1,66 @@
+name: OpenSRM checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  specification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements-dev.lock.txt
+      - run: python scripts/check_project.py
+      - run: python -m unittest discover -s tests -v
+      - run: python -m openapi_spec_validator docs/api/openapi.json
+      - run: python scripts/scan_sensitive.py --tracked
+      - run: python -m pip_audit -r requirements-dev.lock.txt --strict
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: chmod +x backend/mvnw
+      - run: docker build -t open-srm-database:0.8.0-local deploy/database
+      - run: ./mvnw -B -ntp -Pintegration clean verify
+        working-directory: backend
+      - run: ./mvnw -B -ntp org.apache.maven.plugins:maven-dependency-plugin:3.8.1:tree -DoutputType=json -DoutputFile=target/dependency-tree.json
+        working-directory: backend
+      - run: python3 scripts/audit-maven.py backend/target/dependency-tree.json
+  frontend-and-compose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24.22.0'
+      - run: npm ci --ignore-scripts && npm run build && npm audit --audit-level=high
+        working-directory: frontend
+      - run: python3 scripts/init-local.py
+      - run: docker compose --env-file .env -f deploy/compose.yml up -d --build --wait --wait-timeout 240
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - run: npm run test:e2e
+        working-directory: frontend
+      - run: python3 scripts/verify-workspace-restart.py --url http://127.0.0.1:8080 --allow-test-restart
+      - run: sh scripts/audit-images.sh
+      - run: python3 scripts/recovery.py backup --directory backups/ci-drill --allow-test-maintenance
+      - run: python3 scripts/recovery.py restore --directory backups/ci-drill --target tmp/ci-recovery --port 8089 --allow-test-maintenance
+      - run: python3 scripts/benchmark.py --root tmp/ci-recovery --url http://127.0.0.1:8089
+      - if: always()
+        run: docker compose --env-file .env -f deploy/compose.yml down
