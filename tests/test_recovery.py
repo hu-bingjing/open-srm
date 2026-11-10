@@ -6,6 +6,21 @@ spec=importlib.util.spec_from_file_location('recovery',ROOT/'scripts/recovery.py
 class RecoverySafetyTests(unittest.TestCase):
  def setUp(self):
   (ROOT/'tmp').mkdir(exist_ok=True)
+ def test_api_restart_waits_for_existing_container_health(self):
+  import json
+  from unittest.mock import patch
+  starting=json.dumps({'Running':True,'Health':{'Status':'starting'}}).encode()
+  healthy=json.dumps({'Running':True,'Health':{'Status':'healthy'}}).encode()
+  with patch.object(r,'run',side_effect=[b'',starting,healthy]) as command,patch.object(r.time,'sleep'):
+   r.start_api('fixture-api')
+  self.assertEqual(command.call_args_list[0].args[0],[*r.COMPOSE,'start','api'])
+  self.assertEqual(command.call_args_list[-1].args[0][-1],'fixture-api')
+ def test_api_restart_rejects_stopped_or_timed_out_container(self):
+  import json
+  from unittest.mock import patch
+  for state in ({'Running':False},{'Running':True,'Health':{'Status':'unhealthy'}}):
+   with patch.object(r,'run',side_effect=[b'',json.dumps(state).encode()]),self.assertRaises(RuntimeError):
+    r.start_api('fixture-api',timeout=0)
  def test_image_export_requires_all_layers_and_running_images(self):
   import json
   with tempfile.TemporaryDirectory(dir=ROOT/'tmp') as work:

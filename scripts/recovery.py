@@ -27,6 +27,19 @@ def run(args, *, cwd=ROOT, input=None, output=None):
     return subprocess.run(args, cwd=cwd, input=input, stdout=output or subprocess.PIPE, stderr=subprocess.PIPE, check=True).stdout
 
 
+def start_api(container, timeout=180):
+    # Start the existing container without version-specific Compose wait flags.
+    run([*COMPOSE, 'start', 'api'])
+    deadline = time.monotonic() + timeout
+    while True:
+        state = json.loads(run(['docker', 'inspect', '--format', '{{json .State}}', container]))
+        if state.get('Running') and state.get('Health', {}).get('Status') == 'healthy':
+            return
+        if not state.get('Running') or time.monotonic() >= deadline:
+            raise RuntimeError('Existing API container failed to become healthy after backup')
+        time.sleep(2)
+
+
 def sql(compose, query, cwd=ROOT):
     return run([*compose, 'exec', '-T', 'database', 'sh', '-c', 'exec psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atqc "$1"', 'sh', query], cwd=cwd).decode().strip()
 
@@ -157,7 +170,7 @@ def backup(args):
             run([*COMPOSE, 'exec', '-T', 'database', 'sh', '-c', 'exec pg_dump -Fc -U "$POSTGRES_USER" -d "$POSTGRES_DB"'], output=output)
         tables = snapshot(COMPOSE)
     finally:
-        run([*COMPOSE, 'start', '--wait', '--wait-timeout', '180', 'api'])
+        start_api(container)
     pause_seconds = time.monotonic() - paused
     # Encrypt only the selected application settings; SAP profile is deliberately excluded.
     config = directory / 'configuration.tar'
