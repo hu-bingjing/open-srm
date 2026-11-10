@@ -15,7 +15,7 @@ license-expression==30.4.4
 markdown-it-py==4.2.0
 mdurl==0.1.2
 msgpack==1.2.4
-openapi-schema-validator==0.6.3
+openapi-schema-validator==0.9.0
 openapi-spec-validator==0.7.2
 packageurl-python==0.17.6
 packaging==26.3
