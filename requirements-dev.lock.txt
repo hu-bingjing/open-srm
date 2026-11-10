@@ -16,7 +16,7 @@ markdown-it-py==4.2.0
 mdurl==0.1.2
 msgpack==1.2.4
 openapi-schema-validator==0.6.3
-openapi-spec-validator==0.7.2
+openapi-spec-validator==0.9.0
 packageurl-python==0.17.6
 packaging==26.3
 pathable==0.4.4
